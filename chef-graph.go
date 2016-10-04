@@ -9,24 +9,16 @@ import (
     "github.com/awalterschulze/gographviz"
 )
 
-type recipes struct {
-    role string
-    file string
-    includeFile []string
-}
-
-
 func main() {
-    //fmt.Printf("[%q]", strings.Trim(" !!! Achtung! Achtung! !!! ", "! "))
     if len(os.Args) < 2 {
         panic("no role")
     }
+
+    // var roleRegistory map[string]([]string)
     graphAst, _ := gographviz.Parse([]byte(`digraph G{}`))
     graph := gographviz.NewGraph()
     gographviz.Analyse(graphAst, graph)
 
-    var roleRegistory map[string]([]string)
-    fmt.Println(roleRegistory)
 
     var roles []string
     roles = append(roles, os.Args[1])
@@ -43,7 +35,6 @@ func main() {
         addGraph(graph, roles[0], included)
         roles = roles[1:]
     }
-    //files := search_roles_from_file(os.Args[1])
     fmt.Println(graph.String())
 }
 
@@ -66,15 +57,14 @@ func searchRolesFromFile (filename string) ([]string, error){
     }
     defer fp.Close()
 
-    re := regexp.MustCompile("['\"].*?['\"]")
+    re := regexp.MustCompile(".*include_recipe\\s+[\\'\"]([a-zA-Z0-9]+[:a-zA-Z0-9-_]*)[\\'\"].*")
     scanner := bufio.NewScanner(fp)
     for scanner.Scan() {
         line := scanner.Text()
-        if strings.Index(line, "include") != -1 {
-            // fmt.Println(line)
-            rolename:= strings.Trim(re.FindStringSubmatch(line)[0], "\"'")
 
-            ret = append(ret, rolename)
+        rolename:= re.FindStringSubmatch(line)
+        if len(rolename) > 0 {
+            ret = append(ret, rolename[1])
         }
     }
 
@@ -82,10 +72,10 @@ func searchRolesFromFile (filename string) ([]string, error){
 }
 
 func addGraph(graph *gographviz.Graph, parent string, children []string) {
-    graph.AddNode("G", "\""+parent+"\"", nil)
+    graph.AddNode("G", `"`+parent+`"`, nil)
     for _, child := range children {
-        graph.AddNode("G", "\""+child+"\"", nil)
-        graph.AddEdge("\""+parent+"\"", "\""+child+"\"", true, nil)
+        graph.AddNode("G", `"`+child+`"`, nil)
+        graph.AddEdge(`"`+parent+`"`, `"`+child+`"`, true, nil)
     }
 }
-
+run_list "recipe[nginx::default]"
