@@ -3,24 +3,28 @@ package main
 import (
     "bufio"
     "fmt"
+    "io"
     "os"
     "regexp"
     "strings"
     "github.com/awalterschulze/gographviz"
 )
 
-func main() {
-    if len(os.Args) < 2 {
-        panic("No role or recipes")
-    }
+type Chefviz struct {
+	outStream, errStream io.Writer
+    graph *gographviz.Graph
+}
 
+func (cv *Chefviz) newChefviz() {
+    graphAst, _ := gographviz.Parse([]byte(`digraph G{}`))
+    cv.graph = gographviz.NewGraph()
+    gographviz.Analyse(graphAst, cv.graph)
+}
+
+func (cv *Chefviz) main(args []string) {
     recipeRegistory := make(map[string]([]string))
     var recipes []string
-    recipes = append(recipes, normalizeRecipeName(os.Args[1]))
-
-    graphAst, _ := gographviz.Parse([]byte(`digraph G{}`))
-    graph := gographviz.NewGraph()
-    gographviz.Analyse(graphAst, graph)
+    recipes = append(recipes, cv.normalizeRecipeName(args[1]))
 
     for len(recipes) > 0 {
         recipe := recipes[0]
@@ -30,8 +34,8 @@ func main() {
             recipes = recipes[1:]
             continue
         }
-        recipepath := recipeToFilename(recipe)
-        included, err := searchRecipesFromFile(recipepath)
+        recipepath := cv.recipeToFilename(recipe)
+        included, err := cv.searchRecipesFromFile(recipepath)
         if err != nil {
             fmt.Println("`" + recipes[0] + "` is not found.")
             recipes = recipes[1:]
@@ -40,13 +44,13 @@ func main() {
 
         recipeRegistory[recipe] = included
         recipes = append(recipes, included...)
-        addGraph(graph, recipes[0], included)
+        cv.addGraph(recipes[0], included)
         recipes = recipes[1:]
     }
-    fmt.Println(graph.String())
+    fmt.Println(cv.graph.String())
 }
 
-func normalizeRecipeName (recipe string) string {
+func (cv *Chefviz) normalizeRecipeName (recipe string) string {
     tmp := strings.Split(recipe, "::")
     if len(tmp) > 1 {
         return recipe
@@ -54,12 +58,12 @@ func normalizeRecipeName (recipe string) string {
     return recipe + "::default"
 }
 
-func recipeToFilename (recipe string) string {
+func (cv *Chefviz) recipeToFilename (recipe string) string {
     tmp := strings.Split(recipe, "::")
     return "../sample-chef-repo/cookbooks/" + tmp[0] + "/recipes/" + tmp[1] + ".rb"
 }
 
-func searchRecipesFromFile (filename string) ([]string, error){
+func (cv *Chefviz) searchRecipesFromFile (filename string) ([]string, error){
     var fp *os.File
     var err error
     var ret []string
@@ -77,17 +81,18 @@ func searchRecipesFromFile (filename string) ([]string, error){
 
         recipename:= re.FindStringSubmatch(line)
         if len(recipename) > 0 {
-            ret = append(ret, normalizeRecipeName(recipename[1]))
+            ret = append(ret, cv.normalizeRecipeName(recipename[1]))
         }
     }
 
     return ret, nil
 }
 
-func addGraph(graph *gographviz.Graph, parent string, children []string) {
-    graph.AddNode("G", `"`+parent+`"`, nil)
+func (cv *Chefviz) addGraph(parent string, children []string) {
+    cv.graph.AddNode("G", `"`+parent+`"`, nil)
     for _, child := range children {
-        graph.AddNode("G", `"`+child+`"`, nil)
-        graph.AddEdge(`"`+parent+`"`, `"`+child+`"`, true, nil)
+        cv.graph.AddNode("G", `"`+child+`"`, nil)
+        cv.graph.AddEdge(`"`+parent+`"`, `"`+child+`"`, true, nil)
     }
 }
+
