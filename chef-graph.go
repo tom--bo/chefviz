@@ -11,42 +11,55 @@ import (
 
 func main() {
     if len(os.Args) < 2 {
-        panic("no role")
+        panic("No role or recipes")
     }
 
-    // var roleRegistory map[string]([]string)
+    recipeRegistory := make(map[string]([]string))
+    var recipes []string
+    recipes = append(recipes, normalizeRecipeName(os.Args[1]))
+
     graphAst, _ := gographviz.Parse([]byte(`digraph G{}`))
     graph := gographviz.NewGraph()
     gographviz.Analyse(graphAst, graph)
 
-
-    var roles []string
-    roles = append(roles, os.Args[1])
-
-    for len(roles) > 0 {
-        rolepath := roleToFilename(roles[0])
-        included, err := searchRolesFromFile(rolepath)
-        if err != nil {
-            fmt.Println("`" + roles[0] + "` is not found.")
-            roles = roles[1:]
+    for len(recipes) > 0 {
+        recipe := recipes[0]
+        _, ok := recipeRegistory[recipe]
+        if ok == true {
+            // duplicate recipes
+            recipes = recipes[1:]
             continue
         }
-        roles = append(roles, included...)
-        addGraph(graph, roles[0], included)
-        roles = roles[1:]
+        recipepath := recipeToFilename(recipe)
+        included, err := searchRecipesFromFile(recipepath)
+        if err != nil {
+            fmt.Println("`" + recipes[0] + "` is not found.")
+            recipes = recipes[1:]
+            continue
+        }
+
+        recipeRegistory[recipe] = included
+        recipes = append(recipes, included...)
+        addGraph(graph, recipes[0], included)
+        recipes = recipes[1:]
     }
     fmt.Println(graph.String())
 }
 
-func roleToFilename (role string) string {
-    tmp := strings.Split(role, "::")
+func normalizeRecipeName (recipe string) string {
+    tmp := strings.Split(recipe, "::")
     if len(tmp) > 1 {
-        return "../sample-chef-repo/cookbooks/" + tmp[0] + "/recipes/" + tmp[1] + ".rb"
+        return recipe
     }
-    return "../sample-chef-repo/cookbooks/" + tmp[0] + "/recipes/default.rb"
+    return recipe + "::default"
 }
 
-func searchRolesFromFile (filename string) ([]string, error){
+func recipeToFilename (recipe string) string {
+    tmp := strings.Split(recipe, "::")
+    return "../sample-chef-repo/cookbooks/" + tmp[0] + "/recipes/" + tmp[1] + ".rb"
+}
+
+func searchRecipesFromFile (filename string) ([]string, error){
     var fp *os.File
     var err error
     var ret []string
@@ -62,9 +75,9 @@ func searchRolesFromFile (filename string) ([]string, error){
     for scanner.Scan() {
         line := scanner.Text()
 
-        rolename:= re.FindStringSubmatch(line)
-        if len(rolename) > 0 {
-            ret = append(ret, rolename[1])
+        recipename:= re.FindStringSubmatch(line)
+        if len(recipename) > 0 {
+            ret = append(ret, normalizeRecipeName(recipename[1]))
         }
     }
 
@@ -78,4 +91,3 @@ func addGraph(graph *gographviz.Graph, parent string, children []string) {
         graph.AddEdge(`"`+parent+`"`, `"`+child+`"`, true, nil)
     }
 }
-run_list "recipe[nginx::default]"
