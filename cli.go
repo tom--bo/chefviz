@@ -22,12 +22,12 @@ type CLI struct {
 // Run invokes the CLI with the given arguments.
 func (cli *CLI) Run(args []string) int {
 	var (
-		recipe bool
+		recipe  bool
 		version bool
 	)
-    if len(args) < 2 {
-        panic("No role or recipes")
-    }
+	if len(args) < 2 {
+		panic("No role or recipes")
+	}
 
 	// Define option flag parse
 	flags := flag.NewFlagSet(Name, flag.ContinueOnError)
@@ -52,7 +52,7 @@ func (cli *CLI) Run(args []string) int {
 	_ = recipe
 	cv := &Chefviz{outStream: cli.outStream, errStream: cli.errStream}
 	cv.newChefviz()
-    cv.main(args)
+	cv.main(args)
 
 	return ExitCodeOK
 }
