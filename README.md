@@ -1,17 +1,34 @@
 # chefviz
 
-
-
 ## Description
 
+Chefviz creates the dot files of recipes dependency-graph for graphviz.
+
+
 ## Usage
+
+```
+chefviz [--rootdir /path/to/chef-directory] cookbook::recipe
+```
+
+The rootdir option can specify both absolute and relative path.
+
+For example,,,
+
+```
+$ chefviz --rootdir ../sample-chef-repo/ nginx::default
+
+(TODO: dot file output sample )
+
+```
+
 
 ## Install
 
 To install, use `go get`:
 
 ```bash
-$ go get -d github.com/tom--bo/chefviz
+$ go get github.com/tom--bo/chefviz
 ```
 
 ## Contribution
