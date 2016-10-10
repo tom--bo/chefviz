@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"os"
 )
 
 // Exit codes are int values that represent an exit code for a particular error.
@@ -22,11 +23,13 @@ type CLI struct {
 // Run invokes the CLI with the given arguments.
 func (cli *CLI) Run(args []string) int {
 	var (
+		rootDir string = ""
 		recipe  bool
 		version bool
 	)
 	if len(args) < 2 {
-		panic("No role or recipes")
+		fmt.Println("No role or recipes are specified.")
+		return 1
 	}
 
 	// Define option flag parse
@@ -34,7 +37,9 @@ func (cli *CLI) Run(args []string) int {
 	flags.SetOutput(cli.errStream)
 
 	flags.BoolVar(&recipe, "recipe", false, "Specify a recipe.")
-	flags.BoolVar(&recipe, "r", false, "(Short)")
+	// flags.BoolVar(&recipe, "re", false, "(Short)")
+	flags.StringVar(&rootDir, "rootdir", "", "")
+	flags.StringVar(&rootDir, "r", "", "(Short)")
 
 	flags.BoolVar(&version, "version", false, "Print version information and quit.")
 
@@ -49,10 +54,23 @@ func (cli *CLI) Run(args []string) int {
 		return ExitCodeOK
 	}
 
+	currentDir, _ := os.Getwd()
+	if rootDir == "" {
+		rootDir = currentDir
+	} else if rootDir[:1] != "/" {
+		rootDir = currentDir + "/" + rootDir + "/"
+	}
+
+	// check rootdir has 'cookbooks' dir
+	if _, err := os.Stat(rootDir + "/cookbooks"); err != nil {
+		fmt.Println("cookbooks directory is not found.")
+		return 1
+	}
+
 	_ = recipe
 	cv := &Chefviz{outStream: cli.outStream, errStream: cli.errStream}
 	cv.newChefviz()
-	cv.main(args)
+	cv.main(rootDir, flags.Args())
 
 	return ExitCodeOK
 }

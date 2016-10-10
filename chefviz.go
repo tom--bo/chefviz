@@ -21,10 +21,10 @@ func (cv *Chefviz) newChefviz() {
 	gographviz.Analyse(graphAst, cv.graph)
 }
 
-func (cv *Chefviz) main(args []string) {
+func (cv *Chefviz) main(rootDir string, args []string) {
 	recipeRegistory := make(map[string]([]string))
 	var recipes []string
-	recipes = append(recipes, cv.normalizeRecipeName(args[1]))
+	recipes = append(recipes, cv.normalizeRecipeName(args[0]))
 
 	for len(recipes) > 0 {
 		recipe := recipes[0]
@@ -34,7 +34,8 @@ func (cv *Chefviz) main(args []string) {
 			recipes = recipes[1:]
 			continue
 		}
-		recipepath := cv.recipeToFilename(recipe)
+		recipepath := rootDir + cv.recipeToFilename(recipe)
+		fmt.Println(recipepath)
 		included, err := cv.searchRecipesFromFile(recipepath)
 		if err != nil {
 			fmt.Println("`" + recipes[0] + "` is not found.")
@@ -60,7 +61,7 @@ func (cv *Chefviz) normalizeRecipeName(recipe string) string {
 
 func (cv *Chefviz) recipeToFilename(recipe string) string {
 	tmp := strings.Split(recipe, "::")
-	return "../sample-chef-repo/cookbooks/" + tmp[0] + "/recipes/" + tmp[1] + ".rb"
+	return "cookbooks/" + tmp[0] + "/recipes/" + tmp[1] + ".rb"
 }
 
 func (cv *Chefviz) searchRecipesFromFile(filename string) ([]string, error) {
