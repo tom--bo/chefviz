@@ -16,12 +16,24 @@ The rootdir option can specify both absolute and relative path.
 For example,,,
 
 ```
-$ chefviz --rootdir ../sample-chef-repo/ nginx::default
+$ chefviz --rootdir /path/to/sample-chef-repo nginx::default > test.dot
+$ cat test.dot
+digraph G {
+	"nginx::default"->"nginx::ngx_lua_module";
+	"nginx::ngx_lua_module"->"nginx::lua";
+	"nginx::ngx_lua_module"->"nginx::ngx_devel_module";
+	"nginx::default";
+	"nginx::lua";
+	"nginx::ngx_devel_module";
+	"nginx::ngx_lua_module";
 
-(TODO: dot file output sample )
+}
 
+# Then you can get the graph by dot command(graphviz).
+$ dot -Tpng test.dot -o test.png
 ```
 
+![top-page](https://github.com/tom--bo/chefviz/raw/image/nginx-sample.png)
 
 ## Install
 

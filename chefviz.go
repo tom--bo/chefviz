@@ -35,10 +35,9 @@ func (cv *Chefviz) main(rootDir string, args []string) {
 			continue
 		}
 		recipepath := rootDir + cv.recipeToFilename(recipe)
-		fmt.Println(recipepath)
 		included, err := cv.searchRecipesFromFile(recipepath)
 		if err != nil {
-			fmt.Println("`" + recipes[0] + "` is not found.")
+			fmt.Fprintln(cv.errStream, "`"+recipes[0]+"` is not found.")
 			recipes = recipes[1:]
 			continue
 		}
