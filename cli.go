@@ -58,7 +58,7 @@ func (cli *CLI) Run(args []string) int {
 	if rootDir == "" {
 		rootDir = currentDir
 	} else if rootDir[:1] != "/" {
-		rootDir = currentDir + "/" + rootDir + "/"
+		rootDir = currentDir + "/" + rootDir
 	}
 
 	// check rootdir has 'cookbooks' dir

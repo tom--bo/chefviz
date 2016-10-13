@@ -60,7 +60,7 @@ func (cv *Chefviz) normalizeRecipeName(recipe string) string {
 
 func (cv *Chefviz) recipeToFilename(recipe string) string {
 	tmp := strings.Split(recipe, "::")
-	return "cookbooks/" + tmp[0] + "/recipes/" + tmp[1] + ".rb"
+	return "/cookbooks/" + tmp[0] + "/recipes/" + tmp[1] + ".rb"
 }
 
 func (cv *Chefviz) searchRecipesFromFile(filename string) ([]string, error) {
